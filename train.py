@@ -46,7 +46,7 @@ def central_agent(config, game, model_weights_queues, experience_queues):
                 a_batch += a_batch_agent
                 r_batch += r_batch_agent
            
-            assert len(s_batch)*config.max_moves == len(a_batch)
+            assert len(s_batch)*game.max_moves == len(a_batch)
             #used shared RMSProp, i.e., shared g
             actions = np.eye(game.action_dim, dtype=np.float32)[np.array(a_batch)]
             value_loss, entropy, actor_gradients, critic_gradients = network.actor_critic_train(np.array(s_batch), 
@@ -95,7 +95,7 @@ def central_agent(config, game, model_weights_queues, experience_queues):
                 r_batch += r_batch_agent
                 ad_batch += ad_batch_agent
            
-            assert len(s_batch)*config.max_moves == len(a_batch)
+            assert len(s_batch)*game.max_moves == len(a_batch)
             #used shared RMSProp, i.e., shared g
             actions = np.eye(game.action_dim, dtype=np.float32)[np.array(a_batch)]
             entropy, gradients = network.policy_train(np.array(s_batch), 
@@ -152,8 +152,8 @@ def agent(agent_id, config, game, tm_subset, model_weights_queue, experience_que
             policy = network.actor_predict(np.expand_dims(state, 0)).numpy()[0]
         elif config.method == 'pure_policy':
             policy = network.policy_predict(np.expand_dims(state, 0)).numpy()[0]
-        assert np.count_nonzero(policy) >= config.max_moves, (policy, state)
-        actions = random_state.choice(game.action_dim, config.max_moves, p=policy, replace=False)
+        assert np.count_nonzero(policy) >= game.max_moves, (policy, state)
+        actions = random_state.choice(game.action_dim, game.max_moves, p=policy, replace=False)
         for a in actions:
             a_batch.append(a)
 
