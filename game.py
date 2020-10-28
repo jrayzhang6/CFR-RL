@@ -56,20 +56,8 @@ class Game(object):
                 else:
                     self.normalized_traffic_matrices[tm_idx-idx_offset,:,:,h] = self.traffic_matrices[tm_idx-h]                         #[Valid_tms, Node, Node, History]
 
-    def get_path_length(self, path):
-        length = 0
-        for edge_idx in path:
-            length += self.link_weights[edge_idx]
-
-        return length
-
-    def get_normalized_tm(self, tm_idx):
-        tm_max_element = np.max(self.traffic_matrices[tm_idx])
-        normalized_tm = self.traffic_matrices[tm_idx] / tm_max_element
-        
-        return normalized_tm
-
-    def get_potential_critical_flows(self, tm):
+    def get_potential_critical_flows(self, tm_idx):
+        tm = self.traffic_matrices[tm_idx]
         f = {}
         for p in range(self.num_pairs):
             s, d = self.pair_idx_to_sd[p]
@@ -81,7 +69,6 @@ class Game(object):
         for i in range(self.max_moves):
             cf.append(sorted_f[i][0])
 
-        #self.cf = np.copy(cf)
         return cf
        
     def get_ecmp_next_hops(self):
@@ -128,7 +115,6 @@ class Game(object):
             s, d = self.pair_idx_to_sd[pair_idx]
             demand = tm[s][d]
             if demand != 0:
-                #self.ecmp_distribute_traffic(link_loads, demand, self.paths[pair_idx])
                 self.ecmp_next_hop_distribution(link_loads, demand, s, d)
 
         critical_idx = np.argsort(-(link_loads / self.link_capacities))[:5]
@@ -136,11 +122,7 @@ class Game(object):
         cf_temp = []
         for pair_idx in range(self.num_pairs):
             paths = self.paths[pair_idx]
-            num_ecmp_paths = 1
-            num_paths = len(paths)
-            while num_paths > 1 and num_ecmp_paths < num_paths and self.get_path_length(paths[num_ecmp_paths-1]) == self.get_path_length(paths[num_ecmp_paths]):
-                num_ecmp_paths += 1
-
+            num_ecmp_paths = len(paths)
             for p in range(num_ecmp_paths):
                 for edge_idx in paths[p]:
                     if edge_idx in critical_idx:
@@ -149,21 +131,18 @@ class Game(object):
                 else:
                     continue
                 break
-
-        self.cf_temp = np.copy(cf_temp)
         
         f = {}
-        for p in self.cf_temp:
+        for p in cf_temp:
             s, d = self.pair_idx_to_sd[p]
             f[p] = tm[s][d]
 
         sorted_f = sorted(f.items(), key = lambda kv: (kv[1], kv[0]), reverse=True)
 
         cf = []
-        for i in range(len(self.cf_temp)):
+        for i in range(len(cf_temp)):
             cf.append(sorted_f[i][0])
 
-        #self.cf = np.copy(cf)
         return cf 
 
     def eval_ecmp_traffic_distribution(self, tm_idx, eval_delay=False):
@@ -441,8 +420,7 @@ class CFRRL_Game(Game):
         _, solution = self.optimal_routing_mlu_critical_pairs(tm_idx, crit_topk[:self.max_moves])
         crit_mlu, crit_delay = self.eval_critical_flow_and_ecmp(tm_idx, crit_topk[:self.max_moves], solution, eval_delay=eval_delay)
 
-        normalized_tm = self.get_normalized_tm(tm_idx)
-        topk = self.get_potential_critical_flows(normalized_tm)
+        topk = self.get_potential_critical_flows(tm_idx)
         _, solution = self.optimal_routing_mlu_critical_pairs(tm_idx, topk[:self.max_moves])
         topk_mlu, topk_delay = self.eval_critical_flow_and_ecmp(tm_idx, topk[:self.max_moves], solution, eval_delay=eval_delay)
 
