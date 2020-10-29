@@ -128,8 +128,6 @@ class Game(object):
                     if edge_idx in critical_idx:
                         cf_temp.append(pair_idx)
                         break
-                else:
-                    continue
                 break
         
         f = {}
