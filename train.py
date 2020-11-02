@@ -20,7 +20,7 @@ flags.DEFINE_integer('num_iter', 10, 'Number of iterations each agent would run'
 GRADIENTS_CHECK=False
 
 def central_agent(config, game, model_weights_queues, experience_queues):
-    network = Network(config, game.state_dims, game.action_dim, master=True)
+    network = Network(config, game.state_dims, game.action_dim, game.max_moves, master=True)
     network.save_hyperparams(config)
     start_step = network.restore_ckpt()
     for step in tqdm(range(start_step, config.max_step), ncols=70, initial=start_step):
@@ -125,7 +125,7 @@ def central_agent(config, game, model_weights_queues, experience_queues):
 
 def agent(agent_id, config, game, tm_subset, model_weights_queue, experience_queue):
     random_state = np.random.RandomState(seed=agent_id)
-    network = Network(config, game.state_dims, game.action_dim, master=False)
+    network = Network(config, game.state_dims, game.action_dim, game.max_moves, master=False)
 
     # initial synchronization of the model weights from the coordinator 
     model_weights = model_weights_queue.get()

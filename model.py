@@ -8,10 +8,10 @@ import numpy as np
 import tensorflow as tf
 
 class Network():
-    def __init__(self, config, input_dims, action_dim, master=True):
+    def __init__(self, config, input_dims, action_dim, max_moves, master=True):
         self.input_dims = input_dims
         self.action_dim = action_dim
-        self.max_moves = config.max_moves
+        self.max_moves = max_moves
         self.model_name = config.version+'-'\
                             +config.project_name+'_'\
                             +config.method+'_'\
