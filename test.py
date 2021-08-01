@@ -34,7 +34,7 @@ def main(_):
     config = get_config(FLAGS) or FLAGS
     env = Environment(config, is_training=False)
     game = CFRRL_Game(config, env)
-    network = Network(config, game.state_dims, game.action_dim)
+    network = Network(config, game.state_dims, game.action_dim, game.max_moves)
 
     step = network.restore_ckpt(FLAGS.ckpt)
     if config.method == 'actor_critic':
